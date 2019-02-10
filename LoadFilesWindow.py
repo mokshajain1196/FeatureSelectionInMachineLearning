@@ -41,9 +41,13 @@ class Ui_LoadFilesDialog(QWidget):
         self.Test_Browse_pushButton = QtWidgets.QPushButton(LoadFilesDialog)
         self.Test_Browse_pushButton.setGeometry(QtCore.QRect(290, 90, 75, 23))
         self.Test_Browse_pushButton.setObjectName("Test_Browse_pushButton")
+        self.Test_Browse_pushButton.clicked.connect(self.loadTestFile)
+
         self.Train_Browse_pushButton = QtWidgets.QPushButton(LoadFilesDialog)
         self.Train_Browse_pushButton.setGeometry(QtCore.QRect(290, 40, 75, 23))
         self.Train_Browse_pushButton.setObjectName("Train_Browse_pushButton")
+        self.Train_Browse_pushButton.clicked.connect(self.loadTrainFile)
+
         self.MethodTypes_Label = QtWidgets.QLabel(LoadFilesDialog)
         self.MethodTypes_Label.setGeometry(QtCore.QRect(20, 120, 151, 16))
         self.MethodTypes_Label.setObjectName("MethodTypes_Label")
