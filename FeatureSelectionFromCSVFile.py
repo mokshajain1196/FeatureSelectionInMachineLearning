@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectFromModel
-from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV, RidgeClassifierCV, Lasso, ElasticNet, Ridge
+from sklearn.linear_model import ElasticNetCV, LassoCV, RidgeCV, RidgeClassifier, Lasso, ElasticNet, Ridge, SGDClassifier
+from scipy import stats
 
 #Main Idea: Provide test and train data in differnt .csv files created using EIDOLearner. Feature selection runs on Training set.
 #Same features are selected from testing set and the resukting sets from train and testing are concatenated and provided as result
@@ -60,7 +61,7 @@ class Controller:
         # Break in Variable and Target set
         FeatureSet = np.asarray(CompleteSet[:, :colNo - 1])
         ResultSet = np.asarray(CompleteSet[:, colNo - 1])
-        # Save the Complete set in pandas version. Will be used later
+        # Save the Complete set in pandas version. Will be used late
         self.Testdata=pd.DataFrame(CompleteSet,columns=self.TraindataSet_Header)
         #Return X and y as numpy
         return FeatureSet,ResultSet
@@ -68,52 +69,62 @@ class Controller:
     #To select type of method for feature selection
     def LassoCVInitialise(self):
         self.methodUsed=LassoCV(cv=10)
-    
     def LassoInitialise(self):
-        self.methodUsed=Lasso()
+        self.methodUsed=Lasso(alpha=0.01)
     def ElasticNetInitialise(self):
-        self.methodUsed=ElasticNet()
+        self.methodUsed=ElasticNet(alpha=0.1)
     def ElasticNetCVInitialise(self):
         self.methodUsed=ElasticNetCV(cv=10)
     def RidgeClassifierInitialise(self):
-         self.methodUsed = RidgeClassifierCV(cv=10)
-
+         self.methodUsed = RidgeClassifier()#alpha=0.75)
     def RidgeCVInitialise(self):
         self.methodUsed = RidgeCV(cv=10)
-
     def RidgeInitialise(self):
         self.methodUsed = Ridge()
 
     #This method selects the features from Feature set of training data(TrainX), based on the index numbers of selected features
     #it selects the columns from feature set of testing data. In end it concatenates both sets and provides a .csv file of selected
     #features as output.
-    def selectFeatures(self,TrainX,TrainY,ExportFilePath,TestX,TestY):
+    def selectFeatures(self,TrainX,TrainY,ExportFilePathTrain,ExportFilePathTest,TestX,TestY): #
         #SFM: Meta-transformer for selecting features based on importance weights.
-        print(self.methodUsed)
-        sfm = SelectFromModel(self.methodUsed, threshold=0.25)
+
+        sfm = SelectFromModel(self.methodUsed, threshold=0.5)
         #Fit the data, Complete training set broken in Variable and Result set
         sfm.fit(TrainX, TrainY)
         #Transform the data
-        n_features = sfm.transform(TrainX)
-
+        n_features_method_used = sfm.transform(TrainX)
+        #print(self.methodUsed)
+        sfm_EN= SelectFromModel(ElasticNet(alpha=0.3), threshold=0.3)
+        sfm_EN.fit(TrainX,TrainY)
+        n_features_elasticNet = sfm_EN.transform(TrainX)
+        #print('n_features_elasticNet',n_features_method_used)
+        #print(stats.ttest_ind(n_features_method_used,n_features_elasticNet,axis=1))
         #Based on selected feature columns, get index numbers and names of features.
         cols = sfm.get_support()
         feature_idxn = np.append(cols, [False])
         featureName = self.Traindata.columns[feature_idxn]
+        print(featureName.values)
         #Create another set from Testing Data for selected features
         testing_featureSet=self.Testdata.iloc[:,feature_idxn]
         ResultName = self.TraindataSet_Header[len(self.TraindataSet_Header) - 1]
         ResultHeader = np.append(featureName.values, ResultName)
         #Complete training set: join features and Result set. Convert to pandas.
-        final_Train = pd.DataFrame(np.c_[n_features, TrainY])
+
+
+        final_Train = pd.DataFrame(np.c_[n_features_method_used, TrainY])
         # Complete testing set: join features and Result set. Convert to pandas.
+
+
         final_Test=pd.DataFrame(np.c_[testing_featureSet,TestY])
         #final set in concatination of training and testing set.
-        final_Set=pd.concat([final_Train,final_Test])
+        #final_Set=pd.concat([final_Train,final_Test])
+
         #When file is read by pandas it adds up row of 0's in the end. One must remove it. Can cause problem in classification.
-        df = final_Set[(final_Set.T != 0.0).any()]
+        dfTrain = final_Train[(final_Train.T != 0.0).any()]
+        dfTest = final_Test[(final_Test.T != 0.0).any()]
         #Convert dataframe to .csv
-        df.to_csv(ExportFilePath, sep=';', header=ResultHeader, encoding='utf8', index=False)
+        dfTrain.to_csv(ExportFilePathTrain, sep=';', header=ResultHeader, encoding='utf8', index=False)
+        dfTest.to_csv(ExportFilePathTest, sep=';', header=ResultHeader, encoding='utf8', index=False)
 
 
 

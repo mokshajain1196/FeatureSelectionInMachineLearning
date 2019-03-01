@@ -42,12 +42,10 @@ class Ui_LoadFilesDialog(QWidget):
         self.Test_Browse_pushButton.setGeometry(QtCore.QRect(290, 90, 75, 23))
         self.Test_Browse_pushButton.setObjectName("Test_Browse_pushButton")
         self.Test_Browse_pushButton.clicked.connect(self.loadTestFile)
-
         self.Train_Browse_pushButton = QtWidgets.QPushButton(LoadFilesDialog)
         self.Train_Browse_pushButton.setGeometry(QtCore.QRect(290, 40, 75, 23))
         self.Train_Browse_pushButton.setObjectName("Train_Browse_pushButton")
         self.Train_Browse_pushButton.clicked.connect(self.loadTrainFile)
-
         self.MethodTypes_Label = QtWidgets.QLabel(LoadFilesDialog)
         self.MethodTypes_Label.setGeometry(QtCore.QRect(20, 120, 151, 16))
         self.MethodTypes_Label.setObjectName("MethodTypes_Label")
@@ -90,7 +88,7 @@ class Ui_LoadFilesDialog(QWidget):
         self.retranslateUi(LoadFilesDialog)
         self.ok_cancel_buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
         self.ok_cancel_buttonBox.accepted.connect(self.ToSelectFeature)
-        self.ok_cancel_buttonBox.rejected.connect(LoadFilesDialog.reject)
+        self.ok_cancel_buttonBox.rejected.connect(LoadFilesDialog.close)
         QtCore.QMetaObject.connectSlotsByName(LoadFilesDialog)
 
     def retranslateUi(self, LoadFilesDialog):
@@ -112,14 +110,14 @@ class Ui_LoadFilesDialog(QWidget):
     def loadTrainFile(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        self.TrainFileName, _ = QFileDialog.getOpenFileName(self, "Open File", "","CSV Files(*.csv)", options=options)
+        self.TrainFileName, _ = QFileDialog.getOpenFileName(self, "Open File", "E:\Bachelor Thesis\Data Sets","CSV Files(*.csv)", options=options)
         if self.TrainFileName:
             self.TrainFileName_lineEdit.setText(self.TrainFileName)
 
     def loadTestFile(self):
         options = QtWidgets.QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        self.TestFileName, _ = QFileDialog.getOpenFileName(self, "Open File", "", "CSV Files(*.csv)", options=options)
+        self.TestFileName, _ = QFileDialog.getOpenFileName(self, "Open File", "","CSV Files(*.csv)", options=options)
         if self.TestFileName:
             self.TestFileName_lineEdit.setText(self.TestFileName)
 
@@ -131,7 +129,8 @@ class Ui_LoadFilesDialog(QWidget):
         XTrain, yTrain = controller.TrainDataRead()
         XTest, yTest=controller.TestDataRead()
         LoadFilesDialog.close()
-        name, _ = QFileDialog.getSaveFileName(self, 'Save File', '', "CSV Files(*.csv)")
+        nameTrain, _ = QFileDialog.getSaveFileName(self, 'Save Train File', '', "CSV Files(*.csv)")
+        nameTest, _ = QFileDialog.getSaveFileName(self, 'Save Test File', '', "CSV Files(*.csv)")
         if self.Lasso_radioButton.isChecked():
             controller.LassoInitialise()
         elif self.LassoCV_radioButton.isChecked():
@@ -147,9 +146,9 @@ class Ui_LoadFilesDialog(QWidget):
         elif self.RidgeClassifier_radioButton.isChecked():
             controller.RidgeClassifierInitialise()
 
-        controller.selectFeatures(XTrain, yTrain, name, XTest, yTest)
+        controller.selectFeatures(XTrain, yTrain,nameTrain, nameTest, XTest, yTest) #
         print('Process finished')
-        self.close()
+
 
 if __name__ == "__main__":
     import sys
