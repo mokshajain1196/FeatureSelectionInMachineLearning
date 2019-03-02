@@ -88,19 +88,24 @@ class Controller:
     #This method selects the features from Feature set of training data(TrainX), based on the index numbers of selected features
     #it selects the columns from feature set of testing data. In end it concatenates both sets and provides a .csv file of selected
     #features as output.
-    def selectFeatures(self,TrainX,TrainY,ExportFilePathTrain,ExportFilePathTest,TestX,TestY): #
-        #SFM: Meta-transformer for selecting features based on importance weights.
 
+    def selectFeatures(self,TrainX,TrainY,ExportFilePathTrain,ExportFilePathTest,TestX,TestY): #
+
+        #SFM: Meta-transformer for selecting features based on importance weights.
         sfm = SelectFromModel(self.methodUsed, threshold=self.threshold)
+
         #Fit the data, Complete training set broken in Variable and Result set
         sfm.fit(TrainX, TrainY)
+
         #Transform the data
         n_features_method_used = sfm.transform(TrainX)
+
         #Based on selected feature columns, get index numbers and names of features.
         cols = sfm.get_support()
         feature_idxn = np.append(cols, [False])
         featureName = self.Traindata.columns[feature_idxn]
-        print(featureName.values)
+
+
         #Create another set from Testing Data for selected features
         testing_featureSet=self.Testdata.iloc[:,feature_idxn]
         ResultName = self.TraindataSet_Header[len(self.TraindataSet_Header) - 1]
@@ -118,6 +123,7 @@ class Controller:
         CompleteSetTraining = np.reshape(ArraEng, (-1, len(CompleteNpTrainingSet[0])))
 
         final_Train = pd.DataFrame(CompleteSetTraining)
+
         # Complete testing set: join features and Result set. Convert to pandas.
         CompleteNpTestingSet = np.c_[testing_featureSet, TestY]
 
@@ -132,6 +138,7 @@ class Controller:
         final_Test=pd.DataFrame(CompleteSetTest)
         #final set in concatination of training and testing set.
         #final_Set=pd.concat([final_Train,final_Test])
+
 
         #When file is read by pandas it adds up row of 0's in the end. One must remove it. Can cause problem in classification.
         dfTrain = final_Train[(final_Train.T != 0.0).any()]
