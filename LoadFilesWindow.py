@@ -42,10 +42,12 @@ class Ui_LoadFilesDialog(QWidget):
         self.Test_Browse_pushButton.setGeometry(QtCore.QRect(290, 90, 75, 23))
         self.Test_Browse_pushButton.setObjectName("Test_Browse_pushButton")
         self.Test_Browse_pushButton.clicked.connect(self.loadTestFile)
+
         self.Train_Browse_pushButton = QtWidgets.QPushButton(LoadFilesDialog)
         self.Train_Browse_pushButton.setGeometry(QtCore.QRect(290, 40, 75, 23))
         self.Train_Browse_pushButton.setObjectName("Train_Browse_pushButton")
         self.Train_Browse_pushButton.clicked.connect(self.loadTrainFile)
+
         self.MethodTypes_Label = QtWidgets.QLabel(LoadFilesDialog)
         self.MethodTypes_Label.setGeometry(QtCore.QRect(20, 120, 151, 16))
         self.MethodTypes_Label.setObjectName("MethodTypes_Label")
@@ -58,7 +60,7 @@ class Ui_LoadFilesDialog(QWidget):
         self.LassoCV_radioButton = QtWidgets.QRadioButton(LoadFilesDialog)
         self.LassoCV_radioButton.setGeometry(QtCore.QRect(110, 150, 82, 17))
         self.LassoCV_radioButton.setObjectName("LassoCV_radioButton")
-        self.LassoCV_radioButton.toggled.connect(self.changeState)
+        self.LassoCV_radioButton.toggled.connect(self.changeStateCV)
 
         self.ElasticNet_radioButton = QtWidgets.QRadioButton(LoadFilesDialog)
         self.ElasticNet_radioButton.setGeometry(QtCore.QRect(20, 180, 82, 17))
@@ -68,22 +70,30 @@ class Ui_LoadFilesDialog(QWidget):
         self.ElasticNetCV_radioButton = QtWidgets.QRadioButton(LoadFilesDialog)
         self.ElasticNetCV_radioButton.setGeometry(QtCore.QRect(110, 180, 82, 17))
         self.ElasticNetCV_radioButton.setObjectName("ElasticNetCV_radioButton")
-        self.ElasticNetCV_radioButton.toggled.connect(self.changeState)
-
-        self.Ridge_radioButton = QtWidgets.QRadioButton(LoadFilesDialog)
-        self.Ridge_radioButton.setGeometry(QtCore.QRect(20, 210, 82, 17))
-        self.Ridge_radioButton.setObjectName("Ridge_radioButton")
-        self.Ridge_radioButton.toggled.connect(self.changeState)
-
-        self.RidgeCV_radioButton = QtWidgets.QRadioButton(LoadFilesDialog)
-        self.RidgeCV_radioButton.setGeometry(QtCore.QRect(110, 210, 82, 17))
-        self.RidgeCV_radioButton.setObjectName("RidgeCV_radioButton")
-        self.RidgeCV_radioButton.toggled.connect(self.changeState)
+        self.ElasticNetCV_radioButton.toggled.connect(self.changeStateCV)
 
         self.RidgeClassifier_radioButton = QtWidgets.QRadioButton(LoadFilesDialog)
-        self.RidgeClassifier_radioButton.setGeometry(QtCore.QRect(200, 210, 111, 17))
+        self.RidgeClassifier_radioButton.setGeometry(QtCore.QRect(20, 210, 111, 17))
         self.RidgeClassifier_radioButton.setObjectName("RidgeClassifier_radioButton")
         self.RidgeClassifier_radioButton.toggled.connect(self.changeState)
+
+        self.threshold_label = QtWidgets.QLabel(LoadFilesDialog)
+        self.threshold_label.setGeometry(QtCore.QRect(250, 130, 61, 16))
+        self.threshold_label.setObjectName("threshold_label")
+
+        self.alpha_label = QtWidgets.QLabel(LoadFilesDialog)
+        self.alpha_label.setGeometry(QtCore.QRect(250, 170, 47, 13))
+        self.alpha_label.setObjectName("alpha_label")
+
+        self.threshold_lineEdit = QtWidgets.QLineEdit(LoadFilesDialog)
+        self.threshold_lineEdit.setGeometry(QtCore.QRect(310, 130, 61, 20))
+        self.threshold_lineEdit.setObjectName("threshold_lineEdit")
+        self.threshold_lineEdit.setText("0,25")
+
+        self.alpha_lineEdit = QtWidgets.QLineEdit(LoadFilesDialog)
+        self.alpha_lineEdit.setGeometry(QtCore.QRect(310, 170, 61, 20))
+        self.alpha_lineEdit.setObjectName("alpha_lineEdit")
+        self.alpha_lineEdit.setText("1")
 
         self.retranslateUi(LoadFilesDialog)
         self.ok_cancel_buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
@@ -103,9 +113,9 @@ class Ui_LoadFilesDialog(QWidget):
         self.LassoCV_radioButton.setText(_translate("LoadFilesDialog", "LassoCV"))
         self.ElasticNet_radioButton.setText(_translate("LoadFilesDialog", "Elastic Net"))
         self.ElasticNetCV_radioButton.setText(_translate("LoadFilesDialog", "Elastic NetCV"))
-        self.Ridge_radioButton.setText(_translate("LoadFilesDialog", "Ridge"))
-        self.RidgeCV_radioButton.setText(_translate("LoadFilesDialog", "RidgeCV"))
         self.RidgeClassifier_radioButton.setText(_translate("LoadFilesDialog", "Ridge Classifier"))
+        self.threshold_label.setText(_translate("LoadFilesDialog", "Threshold"))
+        self.alpha_label.setText(_translate("LoadFilesDialog", "Alpha"))
 
     def loadTrainFile(self):
         options = QtWidgets.QFileDialog.Options()
@@ -124,27 +134,34 @@ class Ui_LoadFilesDialog(QWidget):
     def changeState(self):
         self.ok_cancel_buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
 
+    def changeStateCV(self):
+        self.ok_cancel_buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.alpha_lineEdit.setText("")
+        self.alpha_lineEdit.setReadOnly(True)
+
     def ToSelectFeature(self):
-        controller = Controller(self.TrainFileName,self.TestFileName)
+        threshold = float(self.threshold_lineEdit.text().replace(',', '.'))
+        controller = Controller(self.TrainFileName,self.TestFileName, threshold= threshold)
         XTrain, yTrain = controller.TrainDataRead()
         XTest, yTest=controller.TestDataRead()
         LoadFilesDialog.close()
         nameTrain, _ = QFileDialog.getSaveFileName(self, 'Save Train File', '', "CSV Files(*.csv)")
         nameTest, _ = QFileDialog.getSaveFileName(self, 'Save Test File', '', "CSV Files(*.csv)")
+        alpha = float(self.alpha_lineEdit.text().replace(',', '.'))
+
+        print("Alpha: ", alpha)
+        print("Threshold: ", threshold)
+
         if self.Lasso_radioButton.isChecked():
-            controller.LassoInitialise()
+            controller.LassoInitialise(alpha)
         elif self.LassoCV_radioButton.isChecked():
             controller.LassoCVInitialise()
         elif self.ElasticNet_radioButton.isChecked():
-            controller.ElasticNetInitialise()
+            controller.ElasticNetInitialise(alpha)
         elif self.ElasticNetCV_radioButton.isChecked():
             controller.ElasticNetCVInitialise()
-        elif self.Ridge_radioButton.isChecked():
-            controller.RidgeInitialise()
-        elif self.RidgeCV_radioButton.isChecked():
-            controller.RidgeCVInitialise()
         elif self.RidgeClassifier_radioButton.isChecked():
-            controller.RidgeClassifierInitialise()
+            controller.RidgeClassifierInitialise(alpha)
 
         controller.selectFeatures(XTrain, yTrain,nameTrain, nameTest, XTest, yTest) #
         print('Process finished')

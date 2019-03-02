@@ -8,13 +8,14 @@ from scipy import stats
 #Same features are selected from testing set and the resukting sets from train and testing are concatenated and provided as result
 #in .csv file.
 class Controller:
-    def __init__(self,TrainfileName,TestfileName):
+    def __init__(self,TrainfileName,TestfileName, threshold):
         self.Traindata=None
         self.Testdata=None
         self.TrainFilename=TrainfileName
         self.TestFileName=TestfileName
         self.TraindataSet_Header=None
         self.methodUsed=None
+        self.threshold = threshold
 
     def TrainDataRead(self):
         #Read as pandas
@@ -69,18 +70,20 @@ class Controller:
     #To select type of method for feature selection
     def LassoCVInitialise(self):
         self.methodUsed=LassoCV(cv=10)
-    def LassoInitialise(self):
-        self.methodUsed=Lasso(alpha=0.01)
-    def ElasticNetInitialise(self):
-        self.methodUsed=ElasticNet(alpha=0.1)
+
+    def LassoInitialise(self, alpha):
+        self.methodUsed=Lasso(alpha=alpha)
+
+    def ElasticNetInitialise(self, alpha):
+        self.methodUsed=ElasticNet(alpha=alpha)
+
     def ElasticNetCVInitialise(self):
         self.methodUsed=ElasticNetCV(cv=10)
-    def RidgeClassifierInitialise(self):
-         self.methodUsed = RidgeClassifier()#alpha=0.75)
-    def RidgeCVInitialise(self):
-        self.methodUsed = RidgeCV(cv=10)
-    def RidgeInitialise(self):
-        self.methodUsed = Ridge()
+
+    def RidgeClassifierInitialise(self, alpha):
+         self.methodUsed = RidgeClassifier(alpha=alpha)
+
+
 
     #This method selects the features from Feature set of training data(TrainX), based on the index numbers of selected features
     #it selects the columns from feature set of testing data. In end it concatenates both sets and provides a .csv file of selected
@@ -88,17 +91,11 @@ class Controller:
     def selectFeatures(self,TrainX,TrainY,ExportFilePathTrain,ExportFilePathTest,TestX,TestY): #
         #SFM: Meta-transformer for selecting features based on importance weights.
 
-        sfm = SelectFromModel(self.methodUsed, threshold=0.5)
+        sfm = SelectFromModel(self.methodUsed, threshold=self.threshold)
         #Fit the data, Complete training set broken in Variable and Result set
         sfm.fit(TrainX, TrainY)
         #Transform the data
         n_features_method_used = sfm.transform(TrainX)
-        #print(self.methodUsed)
-        sfm_EN= SelectFromModel(ElasticNet(alpha=0.3), threshold=0.3)
-        sfm_EN.fit(TrainX,TrainY)
-        n_features_elasticNet = sfm_EN.transform(TrainX)
-        #print('n_features_elasticNet',n_features_method_used)
-        #print(stats.ttest_ind(n_features_method_used,n_features_elasticNet,axis=1))
         #Based on selected feature columns, get index numbers and names of features.
         cols = sfm.get_support()
         feature_idxn = np.append(cols, [False])
