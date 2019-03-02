@@ -133,6 +133,8 @@ class Ui_LoadFilesDialog(QWidget):
 
     def changeState(self):
         self.ok_cancel_buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)
+        self.alpha_lineEdit.setText("1")
+        self.alpha_lineEdit.setReadOnly(False)
 
     def changeStateCV(self):
         self.ok_cancel_buttonBox.button(QDialogButtonBox.Ok).setEnabled(True)

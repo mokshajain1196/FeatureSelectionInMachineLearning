@@ -105,20 +105,38 @@ class Controller:
         testing_featureSet=self.Testdata.iloc[:,feature_idxn]
         ResultName = self.TraindataSet_Header[len(self.TraindataSet_Header) - 1]
         ResultHeader = np.append(featureName.values, ResultName)
+
         #Complete training set: join features and Result set. Convert to pandas.
+        CompleteNpTrainingSet = np.c_[n_features_method_used, TrainY]
 
+        FloatDataEng = []
+        for row in CompleteNpTrainingSet:
+            for elem in row:
+                FloatDataEng.append(str(elem).replace('.', ','))
+        # German to English
+        ArraEng = np.array(FloatDataEng)
+        CompleteSetTraining = np.reshape(ArraEng, (-1, len(CompleteNpTrainingSet[0])))
 
-        final_Train = pd.DataFrame(np.c_[n_features_method_used, TrainY])
+        final_Train = pd.DataFrame(CompleteSetTraining)
         # Complete testing set: join features and Result set. Convert to pandas.
+        CompleteNpTestingSet = np.c_[testing_featureSet, TestY]
 
+        FloatDataEng = []
+        for row in CompleteNpTestingSet:
+            for elem in row:
+                FloatDataEng.append(str(elem).replace('.', ','))
+        # German to English
+        ArraEng = np.array(FloatDataEng)
+        CompleteSetTest = np.reshape(ArraEng, (-1, len(CompleteNpTestingSet[0])))
 
-        final_Test=pd.DataFrame(np.c_[testing_featureSet,TestY])
+        final_Test=pd.DataFrame(CompleteSetTest)
         #final set in concatination of training and testing set.
         #final_Set=pd.concat([final_Train,final_Test])
 
         #When file is read by pandas it adds up row of 0's in the end. One must remove it. Can cause problem in classification.
         dfTrain = final_Train[(final_Train.T != 0.0).any()]
         dfTest = final_Test[(final_Test.T != 0.0).any()]
+
         #Convert dataframe to .csv
         dfTrain.to_csv(ExportFilePathTrain, sep=';', header=ResultHeader, encoding='utf8', index=False)
         dfTest.to_csv(ExportFilePathTest, sep=';', header=ResultHeader, encoding='utf8', index=False)
